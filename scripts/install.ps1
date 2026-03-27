@@ -7,7 +7,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Repo = "podutil/podutil"
+$Repo = "XantX/podman-utils"
 
 function Get-Architecture {
     $arch = $env:PROCESSOR_ARCHITECTURE

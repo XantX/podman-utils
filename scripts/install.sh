@@ -2,7 +2,7 @@
 
 set -e
 
-REPO="podutil/podutil"
+REPO="XantX/podman-utils"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 VERSION="latest"
 

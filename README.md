@@ -1,8 +1,8 @@
 # Podutil
 
-[![Go version](https://img.shields.io/github/go-mod/go-version/XantX/podutil)](https://github.com/XantX/podutil)
-[![Latest release](https://img.shields.io/github/v/release/XantX/podutil)](https://github.com/XantX/podutil/releases/latest)
-[![License](https://img.shields.io/github/license/XantX/podutil)](LICENSE)
+[![Go version](https://img.shields.io/github/go-mod/go-version/XantX/podman-utils)](https://github.com/XantX/podman-utils)
+[![Latest release](https://img.shields.io/github/v/release/XantX/podman-utils)](https://github.com/XantX/podman-utils/releases/latest)
+[![License](https://img.shields.io/github/license/XantX/podman-utils)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-linux%20%7C%20windows%20%7C%20macOS-blue)]()
 
 Herramienta CLI en Go que actúa como un superset de los comandos de Podman, diseñada para mejorar la experiencia de usuario en la gestión de contenedores, imágenes, volúmenes y demás recursos de Podman.
@@ -33,7 +33,7 @@ Podutil ofrece una interfaz de línea de comandos enriquecida sobre Podman, prop
 ### Opción 1: go install (recomendado)
 
 ```bash
-go install github.com/podutil/podutil@latest
+go install github.com/podutil/podman-utils@latest
 ```
 
 ### Opción 2: Scripts de instalación
@@ -48,11 +48,11 @@ curl -sL https://raw.githubusercontent.com/podutil/podutil/main/scripts/install.
 irm -Uri https://raw.githubusercontent.com/podutil/podutil/main/scripts/install.ps1 | iex
 ```
 
-O descarga los scripts desde la sección [Releases](https://github.com/podutil/podutil/releases).
+O descarga los scripts desde la sección [Releases](https://github.com/XantX/podman-utils/releases).
 
 ### Opción 3: Descarga manual
 
-1. Ir a [Releases](https://github.com/podutil/podutil/releases)
+1. Ir a [Releases](https://github.com/XantX/podman-utils/releases)
 2. Descargar el binario para tu SO/arquitectura
 3. Extraer y agregar al PATH
 
