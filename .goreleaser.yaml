@@ -35,5 +35,5 @@ checksum:
 release:
   github:
     owner: XantX
-    name: podutil
+    name: podman-utils
   draft: false
