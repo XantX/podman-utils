@@ -29,12 +29,16 @@ download() {
     fi
 
     if [ "$VERSION" = "latest" ]; then
-        local download_url="https://github.com/${REPO}/releases/${VERSION}/download/podutil_${VERSION}_${OS}_${ARCH}.${format}"
+        local api_response=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest")
+        local tag_name=$(echo "$api_response" | grep -o '"tag_name": *"[^"]*' | head -1 | cut -d'"' -f4)
+        local download_url=$(echo "$api_response" | grep -o '"browser_download_url": *"[^"]*' | grep "${OS}_${ARCH}" | head -1 | cut -d'"' -f4)
+        VERSION="${tag_name#v}"
     else
         local download_url="https://github.com/${REPO}/releases/download/v${VERSION}/podutil_v${VERSION}_${OS}_${ARCH}.${format}"
     fi
 
     echo "Descargando podutil v${VERSION} para ${OS}/${ARCH}..."
+    echo "URL: $download_url"
 
     local tmp_dir=$(mktemp -d)
     cd "$tmp_dir"
