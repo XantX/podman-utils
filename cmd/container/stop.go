@@ -13,14 +13,14 @@ func StopCmd() error {
 		func(id string) error {
 			return podman.New().StopContainer(id)
 		},
-		func() ([]components.ListItem, error) {
+		func() ([]components.ContainerItem, error) {
 			containers, err := podman.New().ListRunningContainers()
 			if err != nil {
 				return nil, err
 			}
-			var items []components.ListItem
+			var items []components.ContainerItem
 			for _, c := range containers {
-				items = append(items, components.ListItem{
+				items = append(items, components.ContainerItem{
 					ID:   c.ID,
 					Name: c.Name,
 				})

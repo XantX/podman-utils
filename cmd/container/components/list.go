@@ -17,41 +17,39 @@ var (
 	HelpStyle         = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
 )
 
-type ListItem struct {
+type ContainerItem struct {
 	ID   string
 	Name string
 }
 
-func (i ListItem) FilterValue() string { return i.Name }
+func (i ContainerItem) FilterValue() string { return i.Name }
 
 type ListModel struct {
 	client         *podman.Client
-	items          []ListItem
-	filtered       []ListItem
+	items          []ContainerItem
+	filtered       []ContainerItem
 	selectedIndex  int
 	filter         string
 	title          string
 	actionName     string
 	onAction       func(id string) error
-	fetchItems     func() ([]ListItem, error)
+	fetchItems     func() ([]ContainerItem, error)
 	err            error
 	successMessage string
-	showList       bool
 }
 
 func NewListModel(
 	title string,
 	actionName string,
 	onAction func(id string) error,
-	fetchItems func() ([]ListItem, error),
+	fetchItems func() ([]ContainerItem, error),
 ) *ListModel {
 	return &ListModel{
-		client:     podman.New(),
 		title:      title,
 		actionName: actionName,
 		onAction:   onAction,
 		fetchItems: fetchItems,
-		showList:   true,
+		client:     podman.New(),
 	}
 }
 
@@ -62,16 +60,8 @@ func (m *ListModel) Init() tea.Cmd {
 		return nil
 	}
 
-	var listItems []ListItem
-	for _, c := range items {
-		listItems = append(listItems, ListItem{
-			ID:   c.ID,
-			Name: c.Name,
-		})
-	}
-
-	m.items = listItems
-	m.filtered = listItems
+	m.items = items
+	m.filtered = items
 	return nil
 }
 
@@ -99,6 +89,14 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, tea.Quit
 			}
+		case "backspace":
+			if len(m.filter) > 0 {
+				m.filter = m.filter[:len(m.filter)-1]
+			}
+		default:
+			if len(msg.String()) == 1 && msg.String() != "/" {
+				m.filter += msg.String()
+			}
 		}
 	case tea.WindowSizeMsg:
 		return m, nil
@@ -114,18 +112,17 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m *ListModel) filterItems() []ListItem {
+func (m *ListModel) filterItems() []ContainerItem {
 	if m.filter == "" {
 		return m.items
 	}
-	var filtered []ListItem
+	var filtered []ContainerItem
 	filterLower := toLower(m.filter)
 	for _, item := range m.items {
 		if contains(toLower(item.Name), filterLower) {
 			filtered = append(filtered, item)
 		}
 	}
-	m.filtered = filtered
 	return filtered
 }
 
@@ -186,21 +183,10 @@ func (m *ListModel) View() string {
 	}
 
 	s += "\n"
-	s += HelpStyle.Render("Filtra por nombre: ")
+	s += HelpStyle.Render("Filtra por nombre (/ para activar): ")
 	s += m.filter + "\n"
 	s += "\n"
-	s += HelpStyle.Render(fmt.Sprintf("Enter: %s | q/esc: Salir\n", m.actionName))
+	s += HelpStyle.Render(fmt.Sprintf("Enter: %s | ↑↓: Navegar | /: Filtrar | q/esc: Salir\n", m.actionName))
 
 	return s
-}
-
-func (m *ListModel) SetFilter(filter string) {
-	m.filter = filter
-	m.filtered = m.filterItems()
-	if m.selectedIndex >= len(m.filtered) {
-		m.selectedIndex = len(m.filtered) - 1
-	}
-	if m.selectedIndex < 0 {
-		m.selectedIndex = 0
-	}
 }
