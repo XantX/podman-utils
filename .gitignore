@@ -3,7 +3,7 @@ podutil.exe
 *.exe
 
 # Go
-go.sum
+# go.sum debe commitearse para builds reproducibles
 vendor/
 
 # GoReleaser
