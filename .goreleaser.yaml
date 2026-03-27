@@ -1,0 +1,39 @@
+project_name: podutil
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: podutil
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    binary: podutil
+    main: ./cmd
+    flags:
+      - -trimpath
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - scripts/install.sh
+      - scripts/install.ps1
+
+checksum:
+  algorithm: sha256
+
+release:
+  github:
+    owner: XantX
+    name: podutil
+  draft: false
