@@ -6,15 +6,15 @@ import (
 	"github.com/podutil/podutil/internal/podman"
 )
 
-func StartCmd() error {
+func StopCmd() error {
 	model := components.NewListModel(
-		"Contenedores detenidos",
-		"Iniciar",
+		"Contenedores corriendo",
+		"Detener",
 		func(id string) error {
-			return podman.New().StartContainer(id)
+			return podman.New().StopContainer(id)
 		},
 		func() ([]components.ListItem, error) {
-			containers, err := podman.New().ListStoppedContainers()
+			containers, err := podman.New().ListRunningContainers()
 			if err != nil {
 				return nil, err
 			}

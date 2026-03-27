@@ -76,12 +76,21 @@ $env:PATH += ";C:\Users\TU_USUARIO\go\bin"
 
 ## Uso
 
+### Iniciar contenedor
 ```bash
-# Iniciar un contenedor específico
-podutil start <container_id>
+podutil start <container_id>  # Inicia directamente
+podutil start                 # Muestra lista interactiva
+```
 
-# Iniciar contenedor con selección interactiva
-podutil start
+### Detener contenedor
+```bash
+podutil stop <container_id>   # Detiene directamente
+podutil stop                  # Muestra lista interactiva
+```
+
+### Ver contenedores corriendo
+```bash
+podutil ps                    # Muestra lista + seleccionar para detalles
 ```
 
 ## Comandos
@@ -89,6 +98,8 @@ podutil start
 | Comando | Descripción |
 |---------|-------------|
 | `podutil start [id]` | Inicia un contenedor. Sin ID muestra lista interactiva |
+| `podutil stop [id]` | Detiene un contenedor. Sin ID muestra lista interactiva |
+| `podutil ps` | Lista contenedores corriendo con detalles |
 | `podutil help` | Muestra ayuda |
 
 ## Desarrollo
