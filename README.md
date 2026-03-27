@@ -40,12 +40,12 @@ go install github.com/podutil/podman-utils@latest
 
 **Linux/macOS:**
 ```bash
-curl -sL https://raw.githubusercontent.com/podutil/podutil/main/scripts/install.sh | bash
+curl -sL https://raw.githubusercontent.com/XantX/podman-utils/master/scripts/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm -Uri https://raw.githubusercontent.com/podutil/podutil/main/scripts/install.ps1 | iex
+irm -Uri https://raw.githubusercontent.com/XantX/podman-utils/master/scripts/install.ps1 | iex
 ```
 
 O descarga los scripts desde la sección [Releases](https://github.com/XantX/podman-utils/releases).
