@@ -18,8 +18,9 @@ var (
 )
 
 type ContainerItem struct {
-	ID   string
-	Name string
+	ID      string
+	Name    string
+	Details podman.ContainerDetail
 }
 
 func (i ContainerItem) FilterValue() string { return i.Name }
@@ -82,10 +83,12 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if len(m.filtered) > 0 {
 				selected := m.filtered[m.selectedIndex]
-				if err := m.onAction(selected.ID); err != nil {
-					m.err = err
-				} else {
-					m.successMessage = fmt.Sprintf("%s '%s' (ID: %s) %s", m.actionName, selected.Name, selected.ID, "ejecutado exitosamente")
+				if m.onAction != nil {
+					if err := m.onAction(selected.ID); err != nil {
+						m.err = err
+					} else {
+						m.successMessage = fmt.Sprintf("%s '%s' (ID: %s) %s", m.actionName, selected.Name, selected.ID, "ejecutado exitosamente")
+					}
 				}
 				return m, tea.Quit
 			}
