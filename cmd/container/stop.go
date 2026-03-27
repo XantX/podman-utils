@@ -1,7 +1,7 @@
 package container
 
 import (
-	"github.com/charmbracelet/bubbletea"
+	"charm.land/bubbletea/v2"
 	"github.com/podutil/podutil/cmd/container/components"
 	"github.com/podutil/podutil/internal/podman"
 )

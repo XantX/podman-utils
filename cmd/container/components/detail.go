@@ -1,8 +1,8 @@
 package components
 
 import (
-	"github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/podutil/podutil/internal/podman"
 )
 
@@ -40,7 +40,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m *DetailModel) View() string {
+func (m *DetailModel) View() tea.View {
 	s := "\n" + TitleStyle.Render("Detalles del Contenedor") + "\n\n"
 
 	s += LabelStyle.Render("ID: ") + ValueStyle.Render(m.container.ID) + "\n"
@@ -54,5 +54,6 @@ func (m *DetailModel) View() string {
 
 	s += "\n" + HelpStyle.Render("Presiona q/esc/backspace para volver\n")
 
-	return s
+	v := tea.NewView(s)
+	return v
 }

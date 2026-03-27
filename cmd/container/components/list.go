@@ -2,9 +2,11 @@ package components
 
 import (
 	"fmt"
+	"io"
 
-	"github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/podutil/podutil/internal/podman"
 )
 
@@ -25,18 +27,41 @@ type ContainerItem struct {
 
 func (i ContainerItem) FilterValue() string { return i.Name }
 
+func (i ContainerItem) Title() string       { return i.Name }
+func (i ContainerItem) Description() string { return i.ID }
+
+type ListDelegate struct {
+	styles list.DefaultItemStyles
+}
+
+func NewListDelegate() *ListDelegate {
+	d := list.NewDefaultDelegate()
+	d.Styles.SelectedTitle = d.Styles.SelectedTitle.Foreground(lipgloss.Color("232")).Background(lipgloss.Color("107"))
+	d.Styles.SelectedDesc = d.Styles.SelectedDesc.Foreground(lipgloss.Color("232")).Background(lipgloss.Color("107"))
+	return &ListDelegate{styles: d.Styles}
+}
+
+func (d *ListDelegate) Height() int                               { return 1 }
+func (d *ListDelegate) Spacing() int                              { return 0 }
+func (d *ListDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd { return nil }
+func (d *ListDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
+	c := item.(ContainerItem)
+	cursor := m.Cursor() == index
+	if cursor {
+		fmt.Fprintf(w, "  %s  %s", c.ID, c.Name)
+	} else {
+		fmt.Fprintf(w, "  %s  %s", c.ID, c.Name)
+	}
+}
+
 type ListModel struct {
-	client         *podman.Client
-	items          []ContainerItem
-	filtered       []ContainerItem
-	selectedIndex  int
-	filter         string
-	title          string
+	list           list.Model
 	actionName     string
 	onAction       func(id string) error
 	fetchItems     func() ([]ContainerItem, error)
 	err            error
 	successMessage string
+	loaded         bool
 }
 
 func NewListModel(
@@ -45,151 +70,93 @@ func NewListModel(
 	onAction func(id string) error,
 	fetchItems func() ([]ContainerItem, error),
 ) *ListModel {
+	items := []list.Item{}
+	l := list.New(items, NewListDelegate(), 0, 0)
+	l.Title = title
+	l.SetShowFilter(true)
+	l.SetFilteringEnabled(true)
+
 	return &ListModel{
-		title:      title,
+		list:       l,
 		actionName: actionName,
 		onAction:   onAction,
 		fetchItems: fetchItems,
-		client:     podman.New(),
 	}
 }
 
 func (m *ListModel) Init() tea.Cmd {
-	items, err := m.fetchItems()
-	if err != nil {
-		m.err = err
-		return nil
+	return func() tea.Msg {
+		items, err := m.fetchItems()
+		if err != nil {
+			return err
+		}
+		m.loaded = true
+		listItems := make([]list.Item, len(items))
+		for i, item := range items {
+			listItems[i] = item
+		}
+		return m.list.SetItems(listItems)
 	}
-
-	m.items = items
-	m.filtered = items
-	return nil
 }
 
 func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.successMessage != "" {
+		return m, tea.Quit
+	}
+
+	if m.err != nil {
+		return m, nil
+	}
+
 	switch msg := msg.(type) {
+	case error:
+		m.err = msg
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
 			return m, tea.Quit
-		case "up", "k":
-			if m.selectedIndex > 0 {
-				m.selectedIndex--
-			}
-		case "down", "j":
-			if m.selectedIndex < len(m.filtered)-1 {
-				m.selectedIndex++
-			}
 		case "enter":
-			if len(m.filtered) > 0 {
-				selected := m.filtered[m.selectedIndex]
-				if m.onAction != nil {
-					if err := m.onAction(selected.ID); err != nil {
-						m.err = err
-					} else {
-						m.successMessage = fmt.Sprintf("%s '%s' (ID: %s) %s", m.actionName, selected.Name, selected.ID, "ejecutado exitosamente")
-					}
+			selected, ok := m.list.SelectedItem().(ContainerItem)
+			if ok && m.onAction != nil {
+				if err := m.onAction(selected.ID); err != nil {
+					m.err = err
+				} else {
+					m.successMessage = fmt.Sprintf("%s '%s' (ID: %s) %s", m.actionName, selected.Name, selected.ID, "ejecutado exitosamente")
 				}
-				return m, tea.Quit
 			}
-		case "backspace":
-			if len(m.filter) > 0 {
-				m.filter = m.filter[:len(m.filter)-1]
-			}
-		default:
-			if len(msg.String()) == 1 && msg.String() != "/" {
-				m.filter += msg.String()
-			}
+			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
-		return m, nil
+		m.list.SetSize(msg.Width, msg.Height)
 	}
 
-	m.filtered = m.filterItems()
-	if m.selectedIndex >= len(m.filtered) {
-		m.selectedIndex = len(m.filtered) - 1
-	}
-	if m.selectedIndex < 0 {
-		m.selectedIndex = 0
-	}
-	return m, nil
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
 }
 
-func (m *ListModel) filterItems() []ContainerItem {
-	if m.filter == "" {
-		return m.items
-	}
-	var filtered []ContainerItem
-	filterLower := toLower(m.filter)
-	for _, item := range m.items {
-		if contains(toLower(item.Name), filterLower) {
-			filtered = append(filtered, item)
-		}
-	}
-	return filtered
-}
-
-func toLower(s string) string {
-	result := make([]byte, len(s))
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c >= 'A' && c <= 'Z' {
-			c += 'a' - 'A'
-		}
-		result[i] = c
-	}
-	return string(result)
-}
-
-func contains(s, substr string) bool {
-	if len(substr) == 0 {
-		return true
-	}
-	if len(s) < len(substr) {
-		return false
-	}
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
-
-func (m *ListModel) View() string {
+func (m *ListModel) View() tea.View {
 	if m.successMessage != "" {
-		return "\n" + SuccessMsgStyle.Render(m.successMessage) + "\n\nPresiona q para salir.\n"
+		v := tea.NewView("")
+		v.SetContent("\n" + SuccessMsgStyle.Render(m.successMessage) + "\n\nPresiona q para salir.\n")
+		return v
 	}
 
 	if m.err != nil {
-		return "\n" + ErrorMsgStyle.Render(fmt.Sprintf("Error: %v", m.err)) + "\n\nPresiona q para salir.\n"
+		v := tea.NewView("")
+		v.SetContent("\n" + ErrorMsgStyle.Render(fmt.Sprintf("Error: %v", m.err)) + "\n\nPresiona q para salir.\n")
+		return v
 	}
 
-	s := "\n" + TitleStyle.Render(m.title) + "\n\n"
-
-	if len(m.filtered) == 0 {
-		s += "No hay contenedores.\n"
-	} else {
-		for i, item := range m.filtered {
-			cursor := "  "
-			if i == m.selectedIndex {
-				cursor = ">"
-			}
-
-			line := fmt.Sprintf("%s %s  %s", cursor, item.ID, item.Name)
-			if i == m.selectedIndex {
-				s += SelectedItemStyle.Render(line) + "\n"
-			} else {
-				s += ItemStyle.Render(line) + "\n"
-			}
-		}
+	if !m.loaded {
+		v := tea.NewView("")
+		v.SetContent("\nCargando...\n")
+		return v
 	}
 
-	s += "\n"
-	s += HelpStyle.Render("Filtra por nombre (/ para activar): ")
-	s += m.filter + "\n"
-	s += "\n"
-	s += HelpStyle.Render(fmt.Sprintf("Enter: %s | ↑↓: Navegar | /: Filtrar | q/esc: Salir\n", m.actionName))
-
-	return s
+	s := m.list.View()
+	s += "\n" + HelpStyle.Render(fmt.Sprintf("Enter: %s | ↑↓: Navegar | /: Filtrar | q/esc: Salir\n", m.actionName))
+	v := tea.NewView(s)
+	return v
 }
