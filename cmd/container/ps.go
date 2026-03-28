@@ -9,7 +9,7 @@ import (
 func PsCmd() error {
 	var model *components.DetailListModel
 	model = components.NewDetailListModel(
-		"Contenedores corriendo",
+		"Todos los contenedores",
 		func(item components.ContainerItem) tea.Model {
 			// When an item is selected, return a detail model
 			// The onBack function returns the same list model (captured via closure)
