@@ -30,10 +30,10 @@ func New() *Client {
 func (c *Client) ListStoppedContainers() ([]Container, error) {
 	cmd := exec.Command("podman", "ps", "-a",
 		"--filter", "status=created",
-		"--filter", "status=paused",
+		"--filter", "status=initialized",
 		"--filter", "status=stopped",
+		"--filter", "status=paused",
 		"--filter", "status=exited",
-		"--filter", "status=dead",
 		"--filter", "status=removing",
 		"--filter", "status=unknown",
 		"--format", "{{.ID}}|{{.Names}}")
