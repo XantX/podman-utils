@@ -76,7 +76,7 @@ func (c *Client) ListRunningContainers() ([]Container, error) {
 }
 
 func (c *Client) ListRunningContainersDetailed() ([]ContainerDetail, error) {
-	cmd := exec.Command("podman", "ps", "--format", "{{.ID}}|{{.Names}}|{{.Image}}|{{.Status}}|{{.Ports}}|{{.CreatedAt}}|{{.Command}}|{{.State}}")
+	cmd := exec.Command("podman", "ps", "-a", "--format", "{{.ID}}|{{.Names}}|{{.Image}}|{{.Status}}|{{.Ports}}|{{.CreatedAt}}|{{.Command}}|{{.State}}")
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
